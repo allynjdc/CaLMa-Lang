@@ -1,3 +1,0 @@
-kung(a==0){	
-	pone("hello world");
-}
