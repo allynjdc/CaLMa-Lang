@@ -1,0 +1,6 @@
+ginabuhat function(a){
+	pone("printing from function");
+}
+samtang(fuck){
+	a = 8;
+}
