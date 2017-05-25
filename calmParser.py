@@ -1,8 +1,5 @@
 #fragment start *
-"""
-A recursive descent parser for nxx1, 
-as defined in nxx1ebnf.txt
-"""
+
 import calmLexer as lexer
 from   calmSymbols import *
 from   genericAstNode import Node
@@ -16,7 +13,7 @@ verbose = False
 indent  = 0
 numberOperator = ["+","-","/","*"]
 equalityOperator = ["==", "<=", ">=", "!="]
-iterateOperator = ["++", "--"]
+iterateOperator = ["++", "--", "-=", "+="]
 #-------------------------------------------------------------------
 #
 #-------------------------------------------------------------------
@@ -24,8 +21,6 @@ def getToken():
 	global token 
 	if verbose: 
 		if token: 
-			# print the current token, before we get the next one
-			#print (" "*40 ) + token.show() 
 			print(("  "*indent) + "   (" + token.show(align=False) + ")")
 	token  = lexer.get()
 
@@ -41,7 +36,6 @@ def push(s):
 def pop(s):
 	global indent
 	if verbose: 
-		#print(("  "*indent) + " " + s + ".end")
 		pass
 	indent -= 1
 
@@ -76,11 +70,8 @@ def error(msg):
 #        foundOneOf
 #-------------------------------------------------------------------
 def foundOneOf(argTokenTypes):
-	"""
-	argTokenTypes should be a list of argTokenType
-	"""
+
 	for argTokenType in argTokenTypes:
-		#print "foundOneOf", argTokenType, token.type
 		if token.type == argTokenType:
 			return True
 	return False
@@ -133,9 +124,7 @@ def parse(sourceText, **kwargs):
 #--------------------------------------------------------
 @track0
 def program():
-	"""
-program = statement {statement} EOF.
-	"""
+
 	global ast
 	node = Node()
 
@@ -152,23 +141,17 @@ program = statement {statement} EOF.
 #--------------------------------------------------------
 @track
 def statement(node):
-	"""
-statement = printStatement | assignmentStatement .
-assignmentStatement = variable "=" expression ";".
-printStatement      = "print" expression ";".
-	"""
+	
 	if found("pone"):
 		printStatement(node)
 	elif found("kung"):
 		ifStatement(node)
-		if found ("kung_nd"):
-			elseifStatement(node)
-		if found("kung_nd_ngd"):
-			elseStatement(node)
 	elif found("ginabuhat"):
 		functionStatement(node)
 	elif found("samtang"):
 		whileLoop(node)
+	elif found("para"):
+		forLoop(node)
 	else:  
 		assignmentStatement(node)
 
@@ -178,14 +161,6 @@ printStatement      = "print" expression ";".
 #--------------------------------------------------------
 @track
 def expression(node):
-	"""
-expression = stringExpression | numberExpression.
-
-/* "||" is the concatenation operator, as in PL/I */
-stringExpression =  (stringLiteral | variable) {"||"            stringExpression}.
-numberExpression =  (numberLiteral | variable) { numberOperator numberExpression}.
-numberOperator = "+" | "-" | "/" | "*" .
-	"""
 
 	if found(STRING):
 		stringLiteral(node)
@@ -199,9 +174,6 @@ numberOperator = "+" | "-" | "/" | "*" .
 			node.add(token)
 			getToken()
 			numberExpression(node)
-
-	elif found("pone"):
-		printStatement(node)
 
 	elif found(""):
 		print "Empty statement inside IF"
@@ -223,24 +195,16 @@ numberOperator = "+" | "-" | "/" | "*" .
 				numberExpression(node)
 		elif foundOneOf(iterateOperator):
 			while foundOneOf(iterateOperator):
-				pass
-		elif found("="):
-			consume("=")
-			node.add(token)
-			consume(NUMBER)
-			node.add(token)
-			consume(";")
-			node.add(token)
-
+				node.add(token)
+				getToken()
+				
 
 #--------------------------------------------------------
 #                   assignmentStatement
 #--------------------------------------------------------
 @track
 def assignmentStatement(node):
-	"""
-assignmentStatement = variable "=" expression ";".
-	"""
+
 	identifierNode = Node(token)
 	consume(IDENTIFIER)
 
@@ -254,13 +218,10 @@ assignmentStatement = variable "=" expression ";".
 	consume(";")
 
 #--------------------------------------------------------
-#                   printStatement
+#     printStatement
 #--------------------------------------------------------
 @track
 def printStatement(node):
-	"""
-printStatement      = "print" expression ";".
-	"""
 	statementNode = Node(token)
 	consume("pone")
 	consume("(")
@@ -277,44 +238,55 @@ printStatement      = "print" expression ";".
 @track
 def ifStatement(node):
 
-	state = Node(token)
+	kungNode = Node(token)
+	node.addNode(kungNode)
+	
 	consume("kung")
 	consume("(")
 
-	node.addNode(state)
-	expression(state)
-
+	expression(kungNode)
 
 	consume(")")
 	consume("{")
 
-	
-	node.addNode(state)
-	expression(state)
+		
+	while  not found("}"):
+		if found("pone"):
+			printStatement(kungNode)
+		elif found("kung"):
+			ifStatement(kungNode)
+		elif found("kung_nd"):
+			kung_ndNode = Node(token)
+			kungNode.addNode(kung_ndNode)
+			consume("kung_nd")
+			elseifStatement(kung_ndNode)
+		elif found(IDENTIFIER):
+			assignmentStatement(kungNode)
+		elif found("kung_nd_ngd"):
+			elseStatement(kungNode)
+			break
 
 	consume("}")
+
+
 #--------------------------------------------------------
 #                   Else If Statement (kung_nd)
 #--------------------------------------------------------
 @track
 def elseifStatement(node):
 
-	state = Node(token)
-	consume("kung_nd")
 	consume("(")
 
-	node.addNode(state)
-	expression(state)
-
+	expression(node)
 
 	consume(")")
 	consume("{")
 
-	
-	node.addNode(state)
-	expression(state)
+	while  not found("}"):
+		statement(node)
 
 	consume("}")
+
 
 #--------------------------------------------------------
 #                   Else Statement (kung_nd_ngd)
@@ -322,38 +294,14 @@ def elseifStatement(node):
 @track
 def elseStatement(node):
 
-	state = Node(token)
+	kung_nd_ngdNode = Node(token)
+	node.addNode(kung_nd_ngdNode)
 	consume("kung_nd_ngd")
 	consume("{")
 
-	node.addNode(state)
-	expression(state)
+	while not found("}"):
+		statement(kung_nd_ngdNode)
 
-	consume("}")
-
-#--------------------------------------------------------
-#                   Function Statement (ginabuhat)
-#--------------------------------------------------------
-@track
-def functionStatement(node):
-
-	state = Node(token)
-	consume("ginabuhat")
-
-	if found(IDENTIFIER):
-		node.addNode(state)
-		stringLiteral(state)
-
-	consume("(")
-	node.addNode(state)
-	expression(state)
-	consume(")")
-
-
-	consume("{")
-
-	node.addNode(state)
-	expression(state)
 
 	consume("}")
 
@@ -363,19 +311,42 @@ def functionStatement(node):
 @track
 def whileLoop(node):
 
-	state = Node(token)
+	samtangNode = Node(token)
+	node.addNode(samtangNode)
+
 	consume("samtang")
 	consume("(")
 
-	node.addNode(state)
-	expression(state)
+	expression(samtangNode)
 
 	consume(")")
 	consume("{")
 
+	while not found("}"):
+		statement(samtangNode)
+
 	
-	node.addNode(state)
-	expression(state)
+	consume("}")
+#--------------------------------------------------------
+#            Function Statement (ginabuhat)
+#--------------------------------------------------------
+@track
+def functionStatement(node):
+
+	funNode = Node(token)
+	consume("ginabuhat")
+
+	node.addNode(funNode)
+	stringLiteral(funNode)
+
+	consume("(")
+	expression(funNode)
+	consume(")")
+
+	consume("{")
+
+	while not found("}"):
+		statement(funNode)
 
 	consume("}")
 
@@ -385,30 +356,40 @@ def whileLoop(node):
 @track
 def forLoop(node):
 
-	state = Node(token)
+	paraNode = Node(token)
+	node.addNode(paraNode)
+
 	consume("para")
 	consume("(")
 
-	node.addNode(state)
-	expression(state)
+	expression(paraNode)
+
+	consume(";")
+
+	expression(paraNode)
+
+	consume(";")
+	paraNode.add(token)
+	consume(IDENTIFIER)
+	if foundOneOf(iterateOperator):
+		while foundOneOf(iterateOperator):
+			paraNode.add(token)
+			getToken()
 
 	consume(")")
 	consume("{")
 
-	
-	node.addNode(state)
-	expression(state)
+	while not found("}"):
+		statement(paraNode)
 
 	consume("}")
+
+
 #--------------------------------------------------------
 #                   stringExpression
 #--------------------------------------------------------
 @track
 def stringExpression(node):
-	"""
-/* "||" is the concatenation operator, as in PL/I */
-stringExpression =  (stringLiteral | variable) {"||" stringExpression}.
-	"""
 
 	if found(STRING):
 		node.add(token)
@@ -431,11 +412,6 @@ stringExpression =  (stringLiteral | variable) {"||" stringExpression}.
 #--------------------------------------------------------
 @track
 def numberExpression(node):
-	"""
-numberExpression =  (numberLiteral | variable) { numberOperator numberExpression}.
-numberOperator = "+" | "-" | "/" | "*" .
-	"""
-	print "Found is a number expression"
 
 	if found(NUMBER):
 		numberLiteral(node)

@@ -1,6 +1,27 @@
-ginabuhat function(a){
-	pone("printing from function");
+kung(a){
+	pone("this is an if statement");
+	pone("this is another if statement");
+
+	kung(h){
+		pone("ertyui");
+		a = 9;
+	}
+	kung_nd_ngd{
+		i = 3423;
+		pone("fjsdsf");
+	}
+	
 }
-samtang(fuck){
-	a = 8;
+ginabuhat whileLoop(ty){
+	samtang(napsack){
+		kung(q){
+			pone("if inside while");
+		}
+
+		pone("hi");
+	}
+}
+
+para(h;o;k++){
+	pone("for loop");
 }

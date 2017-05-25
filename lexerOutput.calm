@@ -1,28 +1,38 @@
 ROOT
-    ginabuhat
-        function
+    kung
         a
         pone
-            "printing from function"
-    ginabuhat
-        function
-        a
+            "this is an if statement"
         pone
-            "printing from function"
+            "this is another if statement"
+        kung
+            h
+            pone
+                "ertyui"
+            =
+                a
+                9
+        kung_nd_ngd
+            =
+                i
+                3423
+            pone
+                "fjsdsf"
     ginabuhat
-        function
-        a
+        whileLoop
+        ty
+        samtang
+            napsack
+            kung
+                q
+                pone
+                    "if inside while"
+            pone
+                "hi"
+    para
+        h
+        o
+        k
+        ++
         pone
-            "printing from function"
-    samtang
-        fuck
-        a
-        8
-        ;
-        }
-    samtang
-        fuck
-        a
-        8
-        ;
-        }
+            "for loop"
